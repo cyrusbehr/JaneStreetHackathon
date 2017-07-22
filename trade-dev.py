@@ -186,25 +186,17 @@ def parse_data(msg):
             sell = dat['sell']
 
             for price, volume in buy:
-                # keep the length constrained by max_length
-                if len(market.price_history[sym]['price']) > max_length:
-                    del market.price_history[sym]['price'][0]
-                    del market.price_history[sym]['volume'][0]
-
-                #add the new data
                 market.price_history[sym]['price'].append(price)
                 market.price_history[sym]['volume'].append(volume)
 
             for price, volume in sell:
-                if len(market.price_history[sym]['price']) > max_length:
-                    del market.price_history[sym]['price'][0]
-                    del market.price_history[sym]['volume'][0]
-
                 market.price_history[sym]['price'].append(price)
                 market.price_history[sym]['volume'].append(volume)
 
             #compute the weighted average and store it in the running_average
             market.running_average[sym] = np.average(market.price_history[sym]['price'], weights=market.price_history[sym]['volume'])
+            market.price_history[sym]['price'] = []
+            market.price_history[sym]['volume'] = []
 
         sell = dat['sell']
         buy = dat['buy']
@@ -264,19 +256,21 @@ def main():
             prepare_order('BOND', 1000, .001, .001)
 
         if newTradeSecurities:
+            for sym in VWAP_stocks:
+            # sym = "GOOG"
+#
+                # current_price = (float(market.highest_buys[sym]) + float(market.cheapest_sells[sym]) / float(2)
+                #This is the sell price PERCENTAGE
+                # current_price_sell = (float(current_price + 1) / float(current_price)) - 1.0
+                #this is the buy price PERCENTAGE
+                # current_price_buy = 1 - (float(current_price - 1) / float(current_price))
+                #def prepare_order(symbol, fair_price, sell_percent, buy_percent):
+                #TODO: make sure cancel_dated_orders works and i call it in the right place
 
-            #for sym in VWAP_stocks:
-            sym = "GOOG"
+                current_price = market.running_average[sym]
 
-            current_price = (float(market.highest_buys[sym]) + float(market.cheapest_sells[sym]) / float(2)
-            #This is the sell price PERCENTAGE
-            current_price_sell = (float(current_price + 1) / float(current_price)) - 1.0
-            #this is the buy price PERCENTAGE
-            current_price_buy = 1 - (float(current_price - 1) / float(current_price))
-            #def prepare_order(symbol, fair_price, sell_percent, buy_percent):
-            #TODO: make sure cancel_dated_orders works and i call it in the right place
-            cancel_dated_orders(sym, current_price, .01, .01)
-            prepare_order(sym, current_price, current_price_sell, current_price_buy)
+                cancel_dated_orders(sym, current_price, .01, .01)
+                prepare_order(sym, current_price, current_price + 5, current_price - 5)
 
         if tradeSecurities:
             # for sym in VWAP_stocks:
