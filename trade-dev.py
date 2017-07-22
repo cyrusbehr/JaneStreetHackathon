@@ -71,7 +71,7 @@ class Portfolio:
                 order_price = order.price * (1 + pos)
             elif order.way == "SELL":
                 order_price = order.price * (1 - neg)
-            if abs(fair_price - order_price) >= .05 * order_price:
+            if abs(fair_price - order_price) >= .01 * fair_price:
                 json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
                 self.hold_server()
                 print(json_string, file=sys.stderr)
@@ -214,7 +214,7 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = True
+    tradeBond = False
     tradeSecurities = True
     while 1:
 
@@ -235,11 +235,14 @@ def main():
             prepare_order('BOND', 1000, .001, .001)
 
         if tradeSecurities:
-            for sym in VWAP_stocks:
-                if market.highest_buys[sym] != 0 and market.cheapest_sells[sym] != 0:
-                    current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2
-                    prepare_order(sym, current_price, .0005, .0005)
-                    portfolio.cancel_dated_orders(sym, current_price, .01, .01)
+            # for sym in VWAP_stocks:
+            sym = "GOOG"
+            if market.highest_buys[sym] != 0 and market.cheapest_sells[sym] != 0:
+                print("This is highest_buys", market.highest_buys[sym])
+                print("This is cheapest_sells", market.cheapest_sells[sym])
+                current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2
+                portfolio.cancel_dated_orders(sym, current_price, .01, .01)
+                prepare_order(sym, current_price, .0005, .0005)
 
         if message is not None:
             #chuck away book messages for now
