@@ -40,6 +40,7 @@ class Market:
         "MSFT": {"price": [], "volume": [] }, "GOOG": {"price": [], "volume": [] },
         "XLK": {"price": [], "volume": [] }}
         self.running_average = {"BOND": 0, "NOKFH": 0, "NOKUS": 0, "AAPL": 0, "MSFT": 0, "GOOG": 0, "XLK": 0}
+        self.cash_tracker = {"BOND": 0, "NOKFH": 0, "NOKUS": 0, "AAPL": 0, "MSFT": 0, "GOOG": 0, "XLK": 0}
 
 
 class Portfolio:
@@ -128,6 +129,8 @@ def prepare_order(symbol, fair_price, sell_percent, buy_percent):
         order_sec(symbol, "SELL", sellPrice, sellAmount)
 
 def order_sec(symbol, direction, price, amount):
+    if price > 12000 and direction == "BUY"
+        return
     id = portfolio.order_id
     portfolio.order_id += 1
     json_string = '{"type": "add", "order_id": '+ str(id) + ',"symbol": "' + symbol +'", "dir": "' +  direction + '", "price": ' + str(price) + ', "size" : ' + str(amount) + '}'
@@ -147,6 +150,15 @@ def parse_data(msg):
             del portfolio.our_orders[order_id]
     elif dat['type'] == "fill":
         order = portfolio.our_orders[dat['order_id']]
+        sym = dat["symbol"]
+        if dat['dir'] == "BUY":
+            market.cash_tracker[sym] = market.cash_tracker[sym] - dat["price"]
+        if dat['dir'] == "SELL":
+            costPerShare = market.cash_tracker[sym] / portfolio.positions[sym]
+            profit = dat["price"] - costPerShare * dat["size"]
+            market.cash_tracker[sym] = market.cash_tracker[sym] + costPerShare * dat["size"]
+            print("The profit on the last sell was %d", profit)
+
         order.fill(dat['size'])
 #    elif dat['type'] == "trade":
 
