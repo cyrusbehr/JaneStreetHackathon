@@ -163,18 +163,18 @@ def parse_data(msg):
             portfolio.cancelling_orders.remove(order_id)
             del portfolio.our_orders[order_id]
     elif dat['type'] == "fill":
-        order.fill(dat['size'])
         order = portfolio.our_orders[dat['order_id']]
-        sym = dat["symbol"]
-        if dat['dir'] == "BUY":
-            market.cash_tracker[sym] = market.cash_tracker[sym] - dat["price"] * dat["size"]
-        if dat['dir'] == "SELL":
-            if portfolio.positions[sym] != 0:
-                costPerShare = market.cash_tracker[sym] / portfolio.positions[sym]
-                profit = (dat["price"] + costPerShare) * dat["size"]
-                market.cash_tracker[sym] = market.cash_tracker[sym] + costPerShare * dat["size"]
-                print("The profit on the last sell was: " + profit)
+        order.fill(dat['size'])
 
+        # sym = dat["symbol"]
+        # if dat['dir'] == "BUY":
+        #     market.cash_tracker[sym] = market.cash_tracker[sym] - dat["price"] * dat["size"]
+        # if dat['dir'] == "SELL":
+        #     if portfolio.positions[sym] != 0:
+        #         costPerShare = market.cash_tracker[sym] / portfolio.positions[sym]
+        #         profit = (dat["price"] + costPerShare) * dat["size"]
+        #         market.cash_tracker[sym] = market.cash_tracker[sym] + costPerShare * dat["size"]
+        #         print("The profit on the last sell was: " + profit)
 
 #    elif dat['type'] == "trade":
 
