@@ -128,6 +128,8 @@ def prepare_order(symbol, fair_price, sell_percent, buy_percent):
         order_sec(symbol, "SELL", sellPrice, sellAmount)
 
 def order_sec(symbol, direction, price, amount):
+    if price > 12000 and direction == "BUY"
+        return
     id = portfolio.order_id
     portfolio.order_id += 1
     json_string = '{"type": "add", "order_id": '+ str(id) + ',"symbol": "' + symbol +'", "dir": "' +  direction + '", "price": ' + str(price) + ', "size" : ' + str(amount) + '}'
@@ -203,7 +205,7 @@ def main():
     global exchange
     global market
     global portfolio
-    s, exchange = connect(sys.argv[1])	
+    s, exchange = connect(sys.argv[1])
     market = Market(exchange)
     jsn = '{"type": "hello", "team": "THETRADERJOES"}'
     print(jsn, file=exchange)
@@ -233,14 +235,14 @@ def main():
 
         if tradeBond:
             prepare_order('BOND', 1000, .001, .001)
- 	
+
         if tradeSecurities:
             for sym in VWAP_stocks:
                 if market.highest_buys[sym] != 0 and market.cheapest_sells[sym] != 0:
-                    current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2 
+                    current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2
                     portfolio.cancel_dated_orders(sym, current_price, .01, .01)
                     prepare_order(sym, current_price, .0005, .0005)
-		
+
         if message is not None:
             #chuck away book messages for now
             m_type = json.loads(message)['type']
