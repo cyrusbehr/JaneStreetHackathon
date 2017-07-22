@@ -129,7 +129,7 @@ def prepare_order(symbol, fair_price, sell_percent, buy_percent):
         order_sec(symbol, "SELL", sellPrice, sellAmount)
 
 def order_sec(symbol, direction, price, amount):
-    if price > 12000 and direction == "BUY"
+    if price > 12000 and direction == "BUY":
         return
     id = portfolio.order_id
     portfolio.order_id += 1
@@ -152,12 +152,13 @@ def parse_data(msg):
         order = portfolio.our_orders[dat['order_id']]
         sym = dat["symbol"]
         if dat['dir'] == "BUY":
-            market.cash_tracker[sym] = market.cash_tracker[sym] - dat["price"]
+            market.cash_tracker[sym] = market.cash_tracker[sym] - dat["price"] * dat["size"]
         if dat['dir'] == "SELL":
-            costPerShare = market.cash_tracker[sym] / portfolio.positions[sym]
-            profit = dat["price"] - costPerShare * dat["size"]
-            market.cash_tracker[sym] = market.cash_tracker[sym] + costPerShare * dat["size"]
-            print("The profit on the last sell was %d", profit)
+            if portfolio.position[sym] != 0:
+                costPerShare = market.cash_tracker[sym] / portfolio.positions[sym]
+                profit = dat["price"] - costPerShare * dat["size"]
+                market.cash_tracker[sym] = market.cash_tracker[sym] + costPerShare * dat["size"]
+                print("The profit on the last sell was %d", profit)
 
         order.fill(dat['size'])
 #    elif dat['type'] == "trade":
@@ -226,8 +227,8 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = False
-    tradeSecurities = True
+    tradeBond = True
+    tradeSecurities = False
     while 1:
 
         message = exchange.readline().strip()
@@ -250,8 +251,8 @@ def main():
             # for sym in VWAP_stocks:
             sym = "GOOG"
             if market.highest_buys[sym] != 0 and market.cheapest_sells[sym] != 0:
-                print("This is highest_buys", market.highest_buys[sym])
-                print("This is cheapest_sells", market.cheapest_sells[sym])
+                # print("This is highest_buys", market.highest_buys[sym])
+                # print("This is cheapest_sells", market.cheapest_sells[sym])
                 current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2
                 portfolio.cancel_dated_orders(sym, current_price, .01, .01)
                 prepare_order(sym, current_price, .0005, .0005)
