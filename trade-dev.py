@@ -15,8 +15,8 @@ transactions_per_tick = 3
 max_length = 1000 * transactions_per_tick #tracking 1 minutes worth of data, assuming 3 buys / sells per tick
 #tracking 5 seconds
 
-buy_percent = 0.3/100
-sell_percent = 0.3/100
+buy_percent = 0.03/100
+sell_percent = 0.03/100
 
 VWAP = True # define our trading strategy
 VWAP_stocks = ["AAPL", "GOOG", "MSFT", "MSFT"] # define which securities we want to trade
