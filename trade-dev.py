@@ -154,9 +154,9 @@ def parse_data(msg):
         if dat['dir'] == "BUY":
             market.cash_tracker[sym] = market.cash_tracker[sym] - dat["price"] * dat["size"]
         if dat['dir'] == "SELL":
-            if portfolio.position[sym] != 0:
+            if portfolio.positions[sym] != 0:
                 costPerShare = market.cash_tracker[sym] / portfolio.positions[sym]
-                profit = dat["price"] - costPerShare * dat["size"]
+                profit = (dat["price"] + costPerShare) * dat["size"]
                 market.cash_tracker[sym] = market.cash_tracker[sym] + costPerShare * dat["size"]
                 print("The profit on the last sell was %d", profit)
 
