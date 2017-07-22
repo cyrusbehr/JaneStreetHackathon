@@ -40,6 +40,7 @@ class Market:
         "MSFT": {"price": [], "volume": [] }, "GOOG": {"price": [], "volume": [] },
         "XLK": {"price": [], "volume": [] }}
         self.running_average = {"BOND": 0, "NOKFH": 0, "NOKUS": 0, "AAPL": 0, "MSFT": 0, "GOOG": 0, "XLK": 0}
+        self.cashTracker = {"BOND": 0, "NOKFH": 0, "NOKUS": 0, "AAPL": 0, "MSFT": 0, "GOOG": 0, "XLK": 0}
 
 
 class Portfolio:
@@ -149,6 +150,15 @@ def parse_data(msg):
             del portfolio.our_orders[order_id]
     elif dat['type'] == "fill":
         order = portfolio.our_orders[dat['order_id']]
+        sym = dat["symbol"]
+        if dat['dir'] == "BUY":
+            market.cashTracker[sym] = market.cashTracker[sym] - dat["price"]
+        if dat['dir'] == "SELL":
+            costPerShare = market.cashTracker[sym] / portfolio.positions[sym]
+            profit = dat["price"] - costPerShare * dat["size"]
+            market.cashTracker[sym] = market.cashTracker[sym] + costPerShare * dat["size"]
+            print("The profit on the last sell was %d", profit)
+
         order.fill(dat['size'])
 #    elif dat['type'] == "trade":
 
