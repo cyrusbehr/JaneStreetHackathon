@@ -243,7 +243,8 @@ def main():
 
     VWAP = False
     tradeBond = False
-    tradeSecurities = True
+    tradeSecurities = False
+    newTradeSecurities = True
     while 1:
 
         message = exchange.readline().strip()
@@ -261,6 +262,21 @@ def main():
 
         if tradeBond:
             prepare_order('BOND', 1000, .001, .001)
+
+        if newTradeSecurities:
+
+            #for sym in VWAP_stocks:
+            sym = "GOOG"
+
+            current_price = (float(market.highest_buys[sym]) + float(market.cheapest_sells[sym]) / float(2)
+            #This is the sell price PERCENTAGE
+            current_price_sell = (float(current_price + 1) / float(current_price)) - 1.0
+            #this is the buy price PERCENTAGE
+            current_price_buy = 1 - (float(current_price - 1) / float(current_price))
+            #def prepare_order(symbol, fair_price, sell_percent, buy_percent):
+            #TODO: make sure cancel_dated_orders works and i call it in the right place
+            cancel_dated_orders(sym, current_price, .01, .01)
+            prepare_order(sym, current_price, current_price_sell, current_price_buy)
 
         if tradeSecurities:
             # for sym in VWAP_stocks:
