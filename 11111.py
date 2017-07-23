@@ -262,8 +262,8 @@ def main():
             msft_avg = int(round(market.highest_buys['MSFT'] / 2 + market.cheapest_sells['MSFT'] / 2))
             xlk_fair_value = int(round((msft_avg * 3 + goog_avg * 2 + aapl_avg * 2 + 3 * 1000)/10.0))
 
-            longTerm  = portfolio.positions["XLF"] + portfolio.outstanding_orders("XLF", "BUY")
-            shortTerm = -1 * portfolio.positions["XLF"] + portfolio.outstanding_orders("XLF", "SELL")
+            longTerm  = portfolio.positions["XLK"] + portfolio.outstanding_orders("XLK", "BUY")
+            shortTerm = -1 * portfolio.positions["XLK"] + portfolio.outstanding_orders("XLK", "SELL")
 
             if abs(xlk_fair_value - xlk_avg) > 12.5:
 
@@ -283,8 +283,8 @@ def main():
                   convert_xlk(way, 40)
 
                   print("xlfguess: "+str(xlk_fair_value)+" price_xlf: "+str(xlk_avg)+"", file=sys.stderr)
-                  #p.CancelObsoleteOrders("XLF", xlk_fair_value, p.halfSpread["XLF"])
-                  #tradeSymbol("XLF", exchange, xlk_fair_value, p.halfSpread["XLF"], p)
+                  #p.CancelObsoleteOrders("XLK", xlk_fair_value, p.halfSpread["XLK"])
+                  #tradeSymbol("XLK", exchange, xlk_fair_value, p.halfSpread["XLK"], p)
 
 
         if message is not None:
