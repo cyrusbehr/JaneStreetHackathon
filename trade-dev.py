@@ -270,7 +270,7 @@ def main():
                 current_price = market.running_average[sym]
 
                 cancel_dated_orders(sym, current_price, .01, .01)
-                prepare_order(sym, current_price, current_price + 5, current_price - 5)
+                prepare_order(sym, current_price, 5/current_price, 5/current_price)
 
         if tradeSecurities:
             # for sym in VWAP_stocks:
