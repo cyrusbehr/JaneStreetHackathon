@@ -140,7 +140,6 @@ def order_sec(symbol, direction, price, amount):
 
 def parse_data(msg):
     dat = json.loads(msg)
-    print(dat)
     if dat['type'] == "reject" and dat['error'] == "TRADING_CLOSED":
       sys.exit(2)
     elif dat['type'] == 'out':
@@ -237,6 +236,8 @@ def main():
     tradeBond = False
     tradeXLK = True
 
+    initialTime1 = time.time()
+
     while 1:
 
         message = exchange.readline().strip()
@@ -255,7 +256,8 @@ def main():
         if tradeBond:
             prepare_order('BOND', 1000, .001, .001)
 
-        if tradeXLK:
+
+        if tradeXLK and  (time.time() - initialTime1) > 1:
             xlk_avg = int(round(market.highest_buys['XLK'] / 2 + market.cheapest_sells['XLK'] / 2))
             aapl_avg = int(round(market.highest_buys['AAPL'] / 2 + market.cheapest_sells['AAPL'] / 2))
             goog_avg = int(round(market.highest_buys['GOOG'] / 2 + market.cheapest_sells['GOOG'] / 2))
@@ -278,7 +280,7 @@ def main():
                   order_sec("AAPL", way, aapl_avg, 8)
                   order_sec("GOOG", way, goog_avg, 8)
                   order_sec("MSFT", way, msft_avg, 12)
-                  order_sec("BOND", way, 1000, 12)
+                  #order_sec("BOND", way, 1000, 12)
 
                   convert_xlk(way, 40)
 
