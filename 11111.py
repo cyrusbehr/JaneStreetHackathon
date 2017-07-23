@@ -58,9 +58,9 @@ class Portfolio:
 
     def hold_server(self):
         '''Holds up script pipeline till server has passed 10ms'''
-        # while time.time() - self.latest_order < .01:
-        #     continue
-        # self.latest_order = time.time()
+        while time.time() - self.latest_order < .0075:
+            continue
+        self.latest_order = time.time()
         return
 
 
@@ -233,9 +233,9 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = True
-    tradeXLK = False
-    tradeNOK = True
+    tradeBond = False
+    tradeXLK = True
+    tradeNOK = False
 
     initialTime1 = time.time()
 
@@ -279,9 +279,9 @@ def main():
             if abs(xlk_fair_value - xlk_avg) > 12.5:
 
                 if xlk_fair_value < xlk_avg:
-                  way = "BUY"
+                    way = "BUY"
                 else:
-                  way = "SELL"
+                    way = "SELL"
 
                 if (way == "BUY" and 40 + longTerm < 100) or (way == "SELL" and 40 + shortTerm < 100):
                   netDirection = ("BUY" if way == "SELL" else "SELL")
