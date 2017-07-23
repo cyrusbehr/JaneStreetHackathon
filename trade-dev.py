@@ -63,35 +63,35 @@ class Portfolio:
         return
 
 
-    def cancel_dated_orders(self, ticker, current_price, high, low):
+    def cancel_dated_orders(self, ticker, current_price, pos, neg):
         for order_id in self.our_orders:
             order = self.our_orders[order_id]
             if order_id in self.cancelling_orders or order.ticker != ticker:
                 continue
             if order.way == "BUY":
-                # order_price = order.price * (1 + pos)
-                if (current_price - order.price) < 0:
-                    json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
-                    self.hold_server()
-                    print(json_string, file=sys.stderr)
-                    print(json_string, file=exchange)
-                    self.cancelling_orders.append(order_id)
+                order_price = order.price * (1 + pos)
+                # if (current_price - order.price) < 0:
+                #     json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
+                #     self.hold_server()
+                #     print(json_string, file=sys.stderr)
+                #     print(json_string, file=exchange)
+                #     self.cancelling_orders.append(order_id)
 
             elif order.way == "SELL":
-                # order_price = order.price * (1 - neg)
-                if(current_price - order.price) > 0:
-                    json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
-                    self.hold_server()
-                    print(json_string, file=sys.stderr)
-                    print(json_string, file=exchange)
-                    self.cancelling_orders.append(order_id)
+                order_price = order.price * (1 - neg)
+                # if(current_price - order.price) > 0:
+                #     json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
+                #     self.hold_server()
+                #     print(json_string, file=sys.stderr)
+                #     print(json_string, file=exchange)
+                #     self.cancelling_orders.append(order_id)
 
-            # if abs(fair_price - order_price) >= .01 * fair_price:
-            #     json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
-            #     self.hold_server()
-            #     print(json_string, file=sys.stderr)
-            #     print(json_string, file=exchange)
-            #     self.cancelling_orders.append(order_id)
+            if abs(fair_price - order_price) >= .01 * fair_price:
+                json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
+                self.hold_server()
+                print(json_string, file=sys.stderr)
+                print(json_string, file=exchange)
+                self.cancelling_orders.append(order_id)
 
     def outstanding_orders(self, ticker, way):
         result = 0
@@ -268,10 +268,10 @@ def main():
             for sym in VWAP_stocks:
 
                 current_price = (float(market.highest_buys[sym]) + float(market.cheapest_sells[sym]) / float(2)
-                current_price_sell = current_price + 1
-                current_price_buy = current_price - 1
+                sell = current_price + 1
+                buy = current_price - 1
                 cancel_dated_orders(sym, current_price, .01, .01)
-                prepare_order(sym, current_price, current_price_sell, current_price_buy)
+                prepare_order(sym, current_price, sell, buy)
 
         if tradeSecurities:
             # for sym in VWAP_stocks:
