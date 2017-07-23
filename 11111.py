@@ -34,8 +34,8 @@ class Market:
         self.all_etf = []
         self.half_spreads = {}
         self.running_avg = {}
-        self.highest_buys = {}
-        self.cheapest_sells = {}
+        self.highest_buys = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOD':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
+        self.cheapest_sells = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOD':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
         self.exchange = exchange
         self.price_history = {"BOND": {"price": [], "volume": [] }, "NOKFH": {"price": [], "volume": [] },
         "NOKUS": {"price": [], "volume": [] }, "AAPL": {"price": [], "volume": [] },
@@ -74,7 +74,7 @@ class Portfolio:
             elif order.way == "SELL":
                 order_price = order.price - halfspread
             if abs(fair_price - order_price) >= 2:
-                json_string = '{"type": "cancel", "order_id": +' str(order_id) + '}'
+                json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '}'
                 self.hold_server()
                 print(json_string, file=sys.stderr)
                 print(json_string, file=market.exchange)
