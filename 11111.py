@@ -34,8 +34,8 @@ class Market:
         self.all_etf = []
         self.half_spreads = {}
         self.running_avg = {}
-        self.highest_buys = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOD':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
-        self.cheapest_sells = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOD':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
+        self.highest_buys = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOG':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
+        self.cheapest_sells = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOG':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
         self.exchange = exchange
         self.price_history = {"BOND": {"price": [], "volume": [] }, "NOKFH": {"price": [], "volume": [] },
         "NOKUS": {"price": [], "volume": [] }, "AAPL": {"price": [], "volume": [] },
@@ -260,10 +260,10 @@ def main():
             aapl_avg = int(round(market.highest_buys['AAPL'] / 2 + market.cheapest_sells['AAPL'] / 2))
             goog_avg = int(round(market.highest_buys['GOOG'] / 2 + market.cheapest_sells['GOOG'] / 2))
             msft_avg = int(round(market.highest_buys['MSFT'] / 2 + market.cheapest_sells['MSFT'] / 2))
-            xlk_fair_value = int(round((msft_avg * 3 + google_avg * 2 + aapl_avg * 2 + 3 * 1000)/10.0))
+            xlk_fair_value = int(round((msft_avg * 3 + goog_avg * 2 + aapl_avg * 2 + 3 * 1000)/10.0))
 
-            longTerm  = p.positions["XLF"] + p.OutstandingOrders("XLF", "BUY")
-            shortTerm = -1 * p.positions["XLF"] + p.OutstandingOrders("XLF", "SELL")
+            longTerm  = portfolio.positions["XLF"] + portfolio.outstanding_orders("XLF", "BUY")
+            shortTerm = -1 * portfolio.positions["XLF"] + portfolio.outstanding_orders("XLF", "SELL")
 
             if abs(xlk_fair_value - xlk_avg) > 12.5:
 
