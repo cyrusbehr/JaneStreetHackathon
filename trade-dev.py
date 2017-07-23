@@ -63,7 +63,7 @@ class Portfolio:
         return
 
 
-    def cancel_dated_orders(self, ticker, current_price, pos, neg):
+    def cancel_dated_orders(self, ticker, current_price, high, low):
         for order_id in self.our_orders:
             order = self.our_orders[order_id]
             if order_id in self.cancelling_orders or order.ticker != ticker:
@@ -126,7 +126,7 @@ def connect(address):
     sok.connect((address, trade_port))
     return (sok, sok.makefile('rw', 1))
 
-def prepare_order(symbol, fair_price, sell_percent, buy_percent):
+def prepare_order(symbol, fair_price, sell_price, buy_price):
     buy = portfolio.positions[symbol] + portfolio.outstanding_orders(symbol, "BUY")
     sell = -1 * portfolio.positions[symbol] + portfolio.outstanding_orders(symbol, "SELL")
     limit = portfolio.security_limits[symbol]
@@ -135,11 +135,11 @@ def prepare_order(symbol, fair_price, sell_percent, buy_percent):
     sellAmount = limit - sell
 
     if buy < limit and buyAmount > 0:
-        buyPrice = math.floor(fair_price * (1 - buy_percent))
+        buyPrice = buy_price
         order_sec(symbol, "BUY", buyPrice, buyAmount)
 
     if sell < limit and sellAmount > 0:
-        sellPrice = math.ceil(fair_price * (1 + sell_percent))
+        sellPrice = sell_price
         order_sec(symbol, "SELL", sellPrice, sellAmount)
 
 def order_sec(symbol, direction, price, amount):
@@ -242,7 +242,7 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = False
+    tradeBond = True
     tradeSecurities = False
     newTradeSecurities = True
     while 1:
@@ -261,22 +261,17 @@ def main():
                 prepare_order(sec, fair_price, sell_percent, buy_percent)
 
         if tradeBond:
-            prepare_order('BOND', 1000, .001, .001)
+            prepare_order('BOND', 1000, 999, 1001)
 
         if newTradeSecurities:
 
-            #for sym in VWAP_stocks:
-            sym = "GOOG"
+            for sym in VWAP_stocks:
 
-            current_price = (float(market.highest_buys[sym]) + float(market.cheapest_sells[sym]) / float(2)
-            #This is the sell price PERCENTAGE
-            current_price_sell = (float(current_price + 1) / float(current_price)) - 1.0
-            #this is the buy price PERCENTAGE
-            current_price_buy = 1 - (float(current_price - 1) / float(current_price))
-            #def prepare_order(symbol, fair_price, sell_percent, buy_percent):
-            #TODO: make sure cancel_dated_orders works and i call it in the right place
-            cancel_dated_orders(sym, current_price, .01, .01)
-            prepare_order(sym, current_price, current_price_sell, current_price_buy)
+                current_price = (float(market.highest_buys[sym]) + float(market.cheapest_sells[sym]) / float(2)
+                current_price_sell = current_price + 1
+                current_price_buy = current_price - 1
+                cancel_dated_orders(sym, current_price, .01, .01)
+                prepare_order(sym, current_price, current_price_sell, current_price_buy)
 
         if tradeSecurities:
             # for sym in VWAP_stocks:
