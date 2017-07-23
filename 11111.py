@@ -58,9 +58,9 @@ class Portfolio:
 
     def hold_server(self):
         '''Holds up script pipeline till server has passed 10ms'''
-        while time.time() - self.latest_order < .01:
-            continue
-        self.latest_order = time.time()
+        # while time.time() - self.latest_order < .01:
+        #     continue
+        # self.latest_order = time.time()
         return
 
 
@@ -233,8 +233,9 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = False
-    tradeXLK = True
+    tradeBond = True
+    tradeXLK = False
+    tradeNOK = True
 
     initialTime1 = time.time()
 
@@ -242,6 +243,14 @@ def main():
 
         message = exchange.readline().strip()
         parse_data(message)
+
+        if tradeNOK:
+            if  market.highest_buys["NOKUS"] != 0 and market.cheapest_sells["NOKFH"] !=0:
+                price_fh_liquid = int(round((market.highest_buys['NOKFH']+  market.cheapest_sells['NOKFH'])/2.0))
+                price_us_inefficient = int(round((market.cheapest_sells['NOKUS']+  market.cheapest_sells['NOKUS'])/2.0))
+                us_half_spread = ((market.highest_buys['NOKUS'] - market.cheapest_sells['NOKUS']) / 2.0)
+                percent = 0.5 * (us_half_spread / price_us_inefficient)
+                prepare_order('NOKUS', price_fh_liquid, percent, percent)
 
         if VWAP:
             for sec in VWAP_stocks:
