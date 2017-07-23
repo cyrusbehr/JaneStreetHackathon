@@ -34,8 +34,8 @@ class Market:
         self.all_etf = []
         self.half_spreads = {}
         self.running_avg = {}
-        self.highest_buys = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOG':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
-        self.cheapest_sells = {'XLK':0, 'AAPL':0, 'MSFT':0, 'GOOG':0, 'NOKUS':0, 'NOKFH':0, 'BOND':0}
+        self.highest_buys = {}
+        self.cheapest_sells = {}
         self.exchange = exchange
         self.price_history = {"BOND": {"price": [], "volume": [] }, "NOKFH": {"price": [], "volume": [] },
         "NOKUS": {"price": [], "volume": [] }, "AAPL": {"price": [], "volume": [] },
@@ -57,10 +57,10 @@ class Portfolio:
         self.order_id = 0
 
     def hold_server(self):
-        # '''Holds up script pipeline till server has passed 10ms'''
-        # while time.time() - self.latest_order < .01:
-        #     continue
-        # self.latest_order = time.time()
+        '''Holds up script pipeline till server has passed 10ms'''
+        while time.time() - self.latest_order < .01:
+            continue
+        self.latest_order = time.time()
         return
 
 
@@ -74,7 +74,7 @@ class Portfolio:
             elif order.way == "SELL":
                 order_price = order.price - halfspread
             if abs(fair_price - order_price) >= 2:
-                json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '}'
+                json_string = '{"type": "cancel", "order_id": +' str(order_id) + '}'
                 self.hold_server()
                 print(json_string, file=sys.stderr)
                 print(json_string, file=market.exchange)
@@ -204,8 +204,8 @@ def convert_xlk(way, amount):
     '''converts between securities and etf'''
     order_id = portfolio.order_id
     portfolio.order_id += 1
-    jsn = '{"type": "convert", "order_id": ' + str(order_id) + ', "symbol": "XLK", "dir": ' + str(way) + ', "size": ' + str(amount) + '}'
-    portfolio.hold_server()
+    jsn = '{"type": "convert", "order_id": ' + str(orderID) + ', "symbol": "XLK", "dir": ' + str(way) + ', "size": ' + str(amount) + '}'
+    portofolio.hold_server()
     print(jsn, file=exchange)
     portfolio.our_orders[order_id] = Order('XLK', -1, amount, way, convert_etf=True)
     sign = 1
@@ -233,24 +233,13 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = True
-    tradeXLK = False
-    tradeNOK = True
-
-    initialTime1 = time.time()
+    tradeBond = False
+    tradeXLK = True
 
     while 1:
 
         message = exchange.readline().strip()
         parse_data(message)
-
-        if tradeNOK:
-            if  market.highest_buys["NOKUS"] != 0 and market.cheapest_sells["NOKFH"] !=0:
-                price_fh_liquid = int(round((market.highest_buys['NOKFH']+  market.cheapest_sells['NOKFH'])/2.0))
-                price_us_inefficient = int(round((market.cheapest_sells['NOKUS']+  market.cheapest_sells['NOKUS'])/2.0))
-                us_half_spread = ((market.highest_buys['NOKUS'] - market.cheapest_sells['NOKUS']) / 2.0)
-                percent = 0.5 * (us_half_spread / price_us_inefficient)
-                prepare_order('NOKUS', price_fh_liquid, percent, percent)
 
         if VWAP:
             for sec in VWAP_stocks:
@@ -265,18 +254,17 @@ def main():
         if tradeBond:
             prepare_order('BOND', 1000, .001, .001)
 
-
-        if tradeXLK and  (time.time() - initialTime1) > 1:
+        if tradeXLK:
             xlk_avg = int(round(market.highest_buys['XLK'] / 2 + market.cheapest_sells['XLK'] / 2))
             aapl_avg = int(round(market.highest_buys['AAPL'] / 2 + market.cheapest_sells['AAPL'] / 2))
             goog_avg = int(round(market.highest_buys['GOOG'] / 2 + market.cheapest_sells['GOOG'] / 2))
             msft_avg = int(round(market.highest_buys['MSFT'] / 2 + market.cheapest_sells['MSFT'] / 2))
-            xlk_fair_value = int(round((msft_avg * 3 + goog_avg * 2 + aapl_avg * 2 + 3 * 1000)/10.0))
+            xlk_fair_value = int(round((msft_avg * 3 + google_avg * 2 + aapl_avg * 2 + 3 * 1000)/10.0))
 
-            longTerm  = portfolio.positions["XLK"] + portfolio.outstanding_orders("XLK", "BUY")
-            shortTerm = -1 * portfolio.positions["XLK"] + portfolio.outstanding_orders("XLK", "SELL")
+            longTerm  = p.positions["XLF"] + p.OutstandingOrders("XLF", "BUY")
+            shortTerm = -1 * p.positions["XLF"] + p.OutstandingOrders("XLF", "SELL")
 
-            if abs(xlk_fair_value - xlk_avg) > 125:
+            if abs(xlk_fair_value - xlk_avg) > 12.5:
 
                 if xlk_fair_value < xlk_avg:
                   way = "BUY"
@@ -289,13 +277,13 @@ def main():
                   order_sec("AAPL", way, aapl_avg, 8)
                   order_sec("GOOG", way, goog_avg, 8)
                   order_sec("MSFT", way, msft_avg, 12)
-                  #order_sec("BOND", way, 1000, 12)
+                  order_sec("BOND", way, 1000, 12)
 
                   convert_xlk(way, 40)
 
                   print("xlfguess: "+str(xlk_fair_value)+" price_xlf: "+str(xlk_avg)+"", file=sys.stderr)
-                  #p.CancelObsoleteOrders("XLK", xlk_fair_value, p.halfSpread["XLK"])
-                  #tradeSymbol("XLK", exchange, xlk_fair_value, p.halfSpread["XLK"], p)
+                  #p.CancelObsoleteOrders("XLF", xlk_fair_value, p.halfSpread["XLF"])
+                  #tradeSymbol("XLF", exchange, xlk_fair_value, p.halfSpread["XLF"], p)
 
 
         if message is not None:
