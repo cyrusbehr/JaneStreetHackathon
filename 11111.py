@@ -23,6 +23,8 @@ VWAP_stocks = ["AAPL", "GOOG", "MSFT", "MSFT"] # define which securities we want
 
 trade_port = 25000
 
+xlk_fair_value = 0
+
 
 class Market:
     '''Market tracking class'''
@@ -62,21 +64,21 @@ class Portfolio:
         return
 
 
-    def cancel_dated_orders(self, ticker, fair_price, pos, neg):
+    def cancel_dated_orders(self, ticker, fair_price, halfspread):
         for order_id in self.our_orders:
             order = self.our_orders[order_id]
             if order_id in self.cancelling_orders or order.ticker != ticker:
                 continue
             if order.way == "BUY":
-                order_price = order.price * (1 + pos)
+                order_price = order.price + halfspread
             elif order.way == "SELL":
-                order_price = order.price * (1 - neg)
+                order_price = order.price - halfspread
             if abs(fair_price - order_price) >= 2:
-                json_string = '{"type": "cancel", "order_id": {}}'.format(order_id)
+                json_string = '{"type": "cancel", "order_id": +' str(order_id) + '}'
                 self.hold_server()
                 print(json_string, file=sys.stderr)
                 print(json_string, file=market.exchange)
-                self.cancellig_orders.append(order_id)
+                self.cancelling_orders.append(order_id)
 
     def outstanding_orders(self, ticker, way):
         result = 0
@@ -138,6 +140,7 @@ def order_sec(symbol, direction, price, amount):
 
 def parse_data(msg):
     dat = json.loads(msg)
+    print(dat)
     if dat['type'] == "reject" and dat['error'] == "TRADING_CLOSED":
       sys.exit(2)
     elif dat['type'] == 'out':
@@ -198,12 +201,29 @@ def parse_data(msg):
             position = info['position']
             portfolio.positions[asym] = position
 
+def convert_xlk(way, amount):
+    '''converts between securities and etf'''
+    order_id = portfolio.order_id
+    portfolio.order_id += 1
+    jsn = '{"type": "convert", "order_id": ' + str(orderID) + ', "symbol": "XLK", "dir": ' + str(way) + ', "size": ' + str(amount) + '}'
+    portofolio.hold_server()
+    print(jsn, file=exchange)
+    portfolio.our_orders[order_id] = Order('XLK', -1, amount, way, convert_etf=True)
+    sign = 1
+    if way == "SELL":
+        sign = -1
+    portfolio.positions["XLK"] += amount * sign
+    portfolio.positions["BOND"] -= amount * sign * 3/10
+    portfolio.positions["AAPL"] -= amount * sign * 2/10
+    portfolio.positions["MSFT"] -= amount * sign * 3/10
+    portfolio.positions["GOOG"] -= amount * sign * 2/10
+
 def main():
     '''Start the running bot'''
     global exchange
     global market
     global portfolio
-    s, exchange = connect(sys.argv[1])	
+    s, exchange = connect(sys.argv[1])
     market = Market(exchange)
     jsn = '{"type": "hello", "team": "THETRADERJOES"}'
     print(jsn, file=exchange)
@@ -214,7 +234,8 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = True
+    tradeBond = False
+    tradeXLK = True
 
     while 1:
 
@@ -233,6 +254,38 @@ def main():
 
         if tradeBond:
             prepare_order('BOND', 1000, .001, .001)
+
+        if tradeXLK:
+            xlk_avg = int(round(market.highest_buys['XLK'] / 2 + market.cheapest_sells['XLK'] / 2))
+            aapl_avg = int(round(market.highest_buys['AAPL'] / 2 + market.cheapest_sells['AAPL'] / 2))
+            goog_avg = int(round(market.highest_buys['GOOG'] / 2 + market.cheapest_sells['GOOG'] / 2))
+            msft_avg = int(round(market.highest_buys['MSFT'] / 2 + market.cheapest_sells['MSFT'] / 2))
+            xlk_fair_value = int(round((msft_avg * 3 + google_avg * 2 + aapl_avg * 2 + 3 * 1000)/10.0))
+
+            longTerm  = p.positions["XLF"] + p.OutstandingOrders("XLF", "BUY")
+            shortTerm = -1 * p.positions["XLF"] + p.OutstandingOrders("XLF", "SELL")
+
+            if abs(xlk_fair_value - xlk_avg) > 12.5:
+
+                if xlk_fair_value < xlk_avg:
+                  way = "BUY"
+                else:
+                  way = "SELL"
+
+                if (way == "BUY" and 40 + longTerm < 100) or (way == "SELL" and 40 + shortTerm < 100):
+                  netDirection = ("BUY" if way == "SELL" else "SELL")
+                  order_sec("XLK", netDirection, xlk_avg + 6, 40)
+                  order_sec("AAPL", way, aapl_avg, 8)
+                  order_sec("GOOG", way, goog_avg, 8)
+                  order_sec("MSFT", way, msft_avg, 12)
+                  order_sec("BOND", way, 1000, 12)
+
+                  convert_xlk(way, 40)
+
+                  print("xlfguess: "+str(xlk_fair_value)+" price_xlf: "+str(xlk_avg)+"", file=sys.stderr)
+                  #p.CancelObsoleteOrders("XLF", xlk_fair_value, p.halfSpread["XLF"])
+                  #tradeSymbol("XLF", exchange, xlk_fair_value, p.halfSpread["XLF"], p)
+
 
         if message is not None:
             #chuck away book messages for now
