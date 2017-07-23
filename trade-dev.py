@@ -54,6 +54,7 @@ class Portfolio:
         self.positions = {}
         self.cancelling_orders = []
         self.order_id = 0
+        self.cancel_time = time.time()
 
     def hold_server(self):
         '''Holds up script pipeline till server has passed 10ms'''
@@ -85,6 +86,14 @@ class Portfolio:
                     print(json_string, file=sys.stderr)
                     print(json_string, file=exchange)
                     self.cancelling_orders.append(order_id)
+
+            if time.time() - self.cancel_time > 10:
+                self.cancel_time = time.time()
+                json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
+                self.hold_server()
+                print(json_string, file=sys.stderr)
+                print(json_string, file=exchange)
+                self.cancelling_orders.append(order_id)
 
             # if abs(fair_price - order_price) >= .01 * fair_price:
             #     json_string = '{"type": "cancel", "order_id": ' + str(order_id) + '} '
