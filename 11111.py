@@ -205,7 +205,7 @@ def convert_xlk(way, amount):
     '''converts between securities and etf'''
     order_id = portfolio.order_id
     portfolio.order_id += 1
-    jsn = '{"type": "convert", "order_id": ' + str(orderID) + ', "symbol": "XLK", "dir": ' + str(way) + ', "size": ' + str(amount) + '}'
+    jsn = '{"type": "convert", "order_id": ' + str(order_id) + ', "symbol": "XLK", "dir": ' + str(way) + ', "size": ' + str(amount) + '}'
     portofolio.hold_server()
     print(jsn, file=exchange)
     portfolio.our_orders[order_id] = Order('XLK', -1, amount, way, convert_etf=True)
