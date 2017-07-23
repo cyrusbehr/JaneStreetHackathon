@@ -48,7 +48,7 @@ class Portfolio:
     def __init__(self):
         self.our_orders = {}
         self.security_limits = {"BOND": 100, "AAPL": 100, "MSFT": 100, "GOOG": 100, "XLK": 100,
-        "NOKFH":10, "NOKUS":10} # Maximum allowed to buy for each securityLimit
+        "NOKFH":5, "NOKUS":5} # Maximum allowed to buy for each securityLimit
         self.fair_price_etf = {}
         self.latest_order = time.time()
         self.positions = {}
@@ -141,6 +141,9 @@ def prepare_order(symbol, fair_price, sell_percent, buy_percent):
     if sell < limit and sellAmount > 0:
         sellPrice = math.ceil(fair_price * (1 + sell_percent))
         order_sec(symbol, "SELL", sellPrice, sellAmount)
+
+
+
 
 def order_sec(symbol, direction, price, amount):
     if price > 12000 and direction == "BUY":
@@ -242,8 +245,10 @@ def main():
     print("Entering trade loop!",file = sys.stderr)
 
     VWAP = False
-    tradeBond = False
-    tradeSecurities = True
+    tradeBond = True
+    tradeSecurities = False
+
+
     while 1:
 
         message = exchange.readline().strip()
@@ -262,13 +267,59 @@ def main():
         if tradeBond:
             prepare_order('BOND', 1000, .001, .001)
 
-        if tradeSecurities:
-            # for sym in VWAP_stocks:
-            sym = "GOOG"
-            if market.highest_buys[sym] != 0 and market.cheapest_sells[sym] != 0:
-                current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2
-                portfolio.cancel_dated_orders(sym, current_price, .001, .001)
-                prepare_order(sym, current_price, .0005, .0005)
+        # These are two stocks for which the fair value changes over time but is always
+        # equal across the two. NOKFH is the more liquid side, and so you'll notice that it's a
+        # better source of price information, but its a lot harder to make money trading.
+        # Protip: use the more liquid leg (NOKFH) to price out and trade the less liquid
+        # leg (NOKUS). The position bounds are tight, though, so you'll have to convert
+        # and trade both stocks if you want to maximize your expected profits.
+        # def convert_adr(price_fh_liquid, price_us_inefficient):
+
+        if tradeNOK:
+
+            price_fh_liquid = int(round((market.highest_buys['NOKFH']+  market.cheapest_sells['NOKFH'])/2.0))
+            price_us_inefficient = int(round((market.cheapest_sells['NOKUS']+  market.cheapest_sells['NOKUS'])/2.0))
+            us_half_spread = ((market.highest_buys['NOKUS'] - market.cheapest_sells['NOKUS']) / 2.0)
+            percent = 0.5 * (us_half_spread / price_us_inefficient)
+            prepare_order('NOKUS', price_fh_liquid, percent, percent)
+
+
+            # fh_shares = portfolio.positions['NOKFH']
+            # us_shares = portfolio.positions['NOKUS']
+            # fh_half_spread = ((market.highest_buys['NOKFH'] - market.cheapest_sells['NOKFH']) / 2.0)
+
+
+            # ##### max starts at 5
+            # if (us_shares * us_half_spread) > 10:
+            #     symbol = 'NOKUS'
+            #     price = price_fh_liquid - (0.5 * us_half_spread)
+            #     direction = 'BUY'
+            #     amount = fh_shares
+            #     #make the order
+            #     id = portfolio.order_id
+            #     portfolio.order_id += 1
+            #     json_string = '{"type": "convert", "order_id": '+ str(id) + ',"symbol": "' + symbol +'", "dir": "' +  direction + '", "size" : ' + str(amount) + '}'
+            #     print(json_string, file=sys.stderr)
+            #     portfolio.hold_server()
+            #     print(json_string, file=exchange)
+            #     portfolio.our_orders[id] = Order(symbol, amount, price, direction)
+            #
+            #
+            # elif profit from converting other direction < 10:
+            #     make other conversion
+
+
+            # def order_sec(symbol, direction, price, amount):
+            #     if price > 12000 and direction == "BUY":
+            #         return
+            #     id = portfolio.order_id
+            #     portfolio.order_id += 1
+            #     json_string = '{"type": "add", "order_id": '+ str(id) + ',"symbol": "' + symbol +'", "dir": "' +  direction + '", "price": ' + str(price) + ', "size" : ' + str(amount) + '}'
+            #     print(json_string, file=sys.stderr)
+            #     portfolio.hold_server()
+            #     print(json_string, file=exchange)
+            #     portfolio.our_orders[id] = Order(symbol, amount, price, direction)
+
 
         if message is not None:
             #chuck away book messages for now
