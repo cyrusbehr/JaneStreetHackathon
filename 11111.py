@@ -57,10 +57,10 @@ class Portfolio:
         self.order_id = 0
 
     def hold_server(self):
-        '''Holds up script pipeline till server has passed 10ms'''
-        while time.time() - self.latest_order < .01:
-            continue
-        self.latest_order = time.time()
+        # '''Holds up script pipeline till server has passed 10ms'''
+        # while time.time() - self.latest_order < .01:
+        #     continue
+        # self.latest_order = time.time()
         return
 
 
@@ -267,7 +267,7 @@ def main():
             longTerm  = portfolio.positions["XLK"] + portfolio.outstanding_orders("XLK", "BUY")
             shortTerm = -1 * portfolio.positions["XLK"] + portfolio.outstanding_orders("XLK", "SELL")
 
-            if abs(xlk_fair_value - xlk_avg) > 12.5:
+            if abs(xlk_fair_value - xlk_avg) > 125:
 
                 if xlk_fair_value < xlk_avg:
                   way = "BUY"
