@@ -263,12 +263,12 @@ def main():
             prepare_order('BOND', 1000, .001, .001)
 
         if tradeSecurities:
-            # for sym in VWAP_stocks:
-            sym = "GOOG"
-            if market.highest_buys[sym] != 0 and market.cheapest_sells[sym] != 0:
-                current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2
-                portfolio.cancel_dated_orders(sym, current_price, .001, .001)
-                prepare_order(sym, current_price, .0005, .0005)
+            for sym in VWAP_stocks:
+
+                if market.highest_buys[sym] != 0 and market.cheapest_sells[sym] != 0:
+                    current_price = (market.highest_buys[sym] + market.cheapest_sells[sym]) / 2
+                    portfolio.cancel_dated_orders(sym, current_price, .001, .001)
+                    prepare_order(sym, current_price, .0005, .0005)
 
         if message is not None:
             #chuck away book messages for now
